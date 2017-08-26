@@ -18,14 +18,20 @@ import Ionicons from "react-native-vector-icons/Ionicons";
 
 import {bars, bars2} from "./bars";
 
+import {mapStyle} from "./store";
+
 class Store {
   @observable bars = [];
-  @observable user;
+  @observable user = {};
 
   @action addBars = (bars) => {
     bars.forEach(bar => this.bars.push({
         key: bar.id,
         name: bar.name,
+        coords: {
+            latitude: bar.point.lat,
+            longitude: bar.point.lon,
+        },
         point: bar.point
     }))
   };
@@ -55,18 +61,35 @@ const MyNavScreen = ({navigation, banner}) => (
     </ScrollView>
 );
 
-const MyHomeScreen = ({navigation}) => (
-    <MapView
-        initialRegion={{
-            latitude: 59.9408928,
-            longitude: 30.3148344,
-            latitudeDelta: 0.0922,
-            longitudeDelta: 0.0421,
-        }}
-        style={styles.container}
-    />
-);
-
+@observer
+class Map extends React.Component {
+    render() {
+        return (
+            <MapView
+                initialRegion={{
+                    latitude: 59.9408928,
+                    longitude: 30.3148344,
+                    latitudeDelta: 0.0922,
+                    longitudeDelta: 0.0421,
+                }}
+                provider={"google"}
+                showsUserLocation={true}
+                followsUserLocation={true}
+                minZoomLevel={6}
+                customMapStyle={mapStyle}
+                style={styles.container}>
+                {barStore.bars.map(bar => (
+                    <MapView.Marker
+                      coordinate={bar.coords}
+                      title={bar.name}
+                      description={"lmao"}
+                      key={bar.key}
+                    />
+                ))}
+            </MapView>
+        )
+    }
+}
 
 const MyProfileScreen = ({navigation}) => (
     <MyNavScreen
@@ -104,11 +127,11 @@ const CatalogueScreen = ({navigation}) => (
 const TabNav = TabNavigator(
     {
         MainTab: {
-            screen: MyHomeScreen,
+            screen: Map,
             path: "/",
             navigationOptions: {
                 title: "Карта",
-                tabBarLabel: "Home",
+                tabBarLabel: "Карта",
                 tabBarIcon: ({tintColor, focused}) => (
                     <Ionicons
                         name={focused ? "ios-home" : "ios-home-outline"}
@@ -154,7 +177,7 @@ const TabNav = TabNavigator(
     },
 );
 
-const StacksOverTabs = StackNavigator({
+const AppScreen = StackNavigator({
     Root: {
         screen: TabNav,
     },
@@ -176,13 +199,13 @@ const StacksOverTabs = StackNavigator({
 export default class App extends React.Component {
     render() {
         const store = barStore;
-        if (!store.user){
+        if (store.user) {
             return (
-                <Text/>
+                <AppScreen screenProps={ store }/>
             )
         } else {
             return (
-                <StacksOverTabs/>
+                <Text/>
             )
         }
 
