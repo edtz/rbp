@@ -1,5 +1,8 @@
 import React, {Component} from "react";
-import {Button, FlatList, Image, ScrollView, StyleSheet, Text, TouchableOpacity, View} from "react-native";
+import {
+    Button, FlatList, Image, ScrollView, StyleSheet, Text, TouchableOpacity,
+    View,
+} from "react-native";
 import {
     addNavigationHelpers,
     StackNavigator,
@@ -12,6 +15,26 @@ import {observer} from "mobx-react";
 import MapView from "react-native-maps";
 
 import Ionicons from "react-native-vector-icons/Ionicons";
+
+import {bars, bars2} from "./bars";
+
+class Store {
+  @observable bars = [];
+  @observable user;
+
+  @action addBars = (bars) => {
+    bars.forEach(bar => this.bars.push({
+        key: bar.id,
+        name: bar.name,
+        point: bar.point
+    }))
+  };
+}
+
+const barStore = new Store();
+
+barStore.addBars(bars.result.items);
+barStore.addBars(bars2.result.items);
 
 
 const MyNavScreen = ({navigation, banner}) => (
@@ -60,26 +83,22 @@ const MySettingsScreen = ({navigation}) => (
     <MyNavScreen banner="Settings Screen" navigation={navigation}/>
 );
 
+@observer
+class List extends React.Component {
+    render() {
+        const store = this.props.store;
+        return (
+            <FlatList
+                style={styles.container}
+                data={store.bars}
+                renderItem={({item}) => <Text style={styles.item}>{item.name}</Text>}
+            />
+        )
+    }
+}
+
 const CatalogueScreen = ({navigation}) => (
-    <FlatList
-        style={styles.container}
-        data={[
-            {key: "Лол1"},
-            {key: "Лол2"},
-            {key: "Лол3"},
-            {key: "Лол4"},
-            {key: "Лол5"},
-            {key: "Лол6"},
-            {key: "Лол7"},
-            {key: "Лол8"},
-            {key: "Лол9"},
-            {key: "Лол10"},
-            {key: "Лол11"},
-            {key: "Лол12"},
-            {key: "Лол13"},
-        ]}
-        renderItem={({item}) => <Text style={styles.item}>{item.key}</Text>}
-    />
+    <List store={barStore}/>
 );
 
 const TabNav = TabNavigator(
@@ -154,6 +173,22 @@ const StacksOverTabs = StackNavigator({
     },
 });
 
+export default class App extends React.Component {
+    render() {
+        const store = barStore;
+        if (!store.user){
+            return (
+                <Text/>
+            )
+        } else {
+            return (
+                <StacksOverTabs/>
+            )
+        }
+
+    }
+}
+
 const styles = StyleSheet.create({
     container: {
         flex: 1,
@@ -221,6 +256,3 @@ const styles = StyleSheet.create({
         height: 44,
     }
 });
-
-
-export default StacksOverTabs;
