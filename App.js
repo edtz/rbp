@@ -20,9 +20,11 @@ import {bars, bars2} from "./bars";
 
 import {mapStyle} from "./store";
 
+import { LoginPage } from "./components/pages/login/login.component";
+
 class Store {
   @observable bars = [];
-  @observable user = {};
+  @observable user;
 
   @action addBars = (bars) => {
     bars.forEach(bar => this.bars.push({
@@ -205,7 +207,7 @@ export default class App extends React.Component {
             )
         } else {
             return (
-                <Text/>
+                <LoginPage/>
             )
         }
 
