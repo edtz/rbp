@@ -22,9 +22,56 @@ import {mapStyle} from "./store";
 
 import { LoginPage } from "./components/pages/login/login.component";
 
+// store = new Store();
+
 class Store {
   @observable bars = [];
   @observable user;
+
+  users = [
+      {
+          id: 1,
+          name: "Алексей",
+          gender: "",
+          beer: [],
+          friends: [3,5],
+          bars: [],
+      },
+      {
+          id: 2,
+          name: "Коля",
+          gender: "",
+          beer: [],
+          friends: [4],
+          bars: [],
+      },
+      {
+          id: 3,
+          name: "Михаил",
+          gender: "",
+          beer: [],
+          friends: [1, 5],
+          bars: [],
+      },
+      {
+          id: 4,
+          name: "Арсен",
+          gender: "",
+          beer: [],
+          friends: [2],
+          bars: [],
+      },
+      {
+          id: 5,
+          name: "Артем",
+          gender: "",
+          beer: [],
+          friends: [1, 3],
+          bars: [],
+      },
+  ];
+
+  beers = [];
 
   @action addBars = (bars) => {
     bars.forEach(bar => this.bars.push({
@@ -36,6 +83,11 @@ class Store {
         },
         point: bar.point
     }))
+  };
+
+  @action loginUser = () =>{
+      this.user = this.users[Math.floor(Math.random()*this.users.length)];
+      console.log("blbalba");
   };
 }
 
@@ -159,12 +211,12 @@ const TabNav = TabNavigator(
         },
         SettingsTab: {
             screen: MySettingsScreen,
-            path: "/settings",
+            path: "/profile",
             navigationOptions: {
-                title: "Settings",
+                title: "Профиль",
                 tabBarIcon: ({tintColor, focused}) => (
                     <Ionicons
-                        name={focused ? "ios-settings" : "ios-settings-outline"}
+                        name={focused ? "ios-person" : "ios-person-outline"}
                         size={26}
                         style={{color: tintColor}}
                     />
@@ -198,16 +250,17 @@ const AppScreen = StackNavigator({
     },
 });
 
+@observer
 export default class App extends React.Component {
     render() {
         const store = barStore;
         if (store.user) {
             return (
-                <AppScreen screenProps={ store }/>
+                <AppScreen screenProps={ barStore }/>
             )
         } else {
             return (
-                <LoginPage/>
+                <LoginPage store={ barStore }/>
             )
         }
 
