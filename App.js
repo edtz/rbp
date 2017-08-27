@@ -34,6 +34,10 @@ const styles = StyleSheet.create({
     container: {
         flex: 1,
     },
+    list: {
+        flex: 1,
+        backgroundColor: "#1c2939",
+    },
     map: {
         flex: 1,
     },
@@ -41,6 +45,7 @@ const styles = StyleSheet.create({
         flex: 1,
         backgroundColor: "#1c2939",
         position: "relative",
+        zIndex: 10,
     },
     barDetail: {
         position: "absolute",
@@ -48,6 +53,14 @@ const styles = StyleSheet.create({
         right: 0,
         bottom: 0,
         zIndex: 10,
+    },
+    filterView: {
+        position: "absolute",
+        left: 0,
+        right: 0,
+        top: 0,
+        zIndex: 5,
+        backgroundColor: "#36465a",
     },
     dragger: {
         width: 50,
@@ -85,6 +98,7 @@ const styles = StyleSheet.create({
         marginLeft: 10,
         marginTop: 5,
         fontSize: 24,
+        color: "#fff",
     },
     favoriteIcon: {
         position: "absolute",
@@ -100,6 +114,7 @@ const styles = StyleSheet.create({
         justifyContent: "center",
         alignItems: "center"
     },
+
 });
 
 class Store {
@@ -112,10 +127,19 @@ class Store {
         longitudeDelta: 0.0421 /2,
     };
     @observable selectedBar;
+    @observable filterPanelIsOpen = false;
 
     @observable drinkFilter;
+    @observable favFilter = false;
     @computed get filteredBars() {
-        return this.bars.filter(el => el.drinks.includes(this.drinkFilter));
+        let bars = this.bars;
+        if (this.drinkFilter) {
+            bars = bars.filter(el => el.beers.includes(this.drinkFilter));
+        }
+        if (this.favFilter) {
+            bars = bars.filter(el => el.isFavourite);
+        }
+        return bars;
     };
 
     users = [
@@ -163,84 +187,104 @@ class Store {
 
     beers = [
         {
+            key: "1",
             id: "1",
-            name: "1",
+            name: "Светлый лагер",
         },
         {
+            key: "2",
             id: "2",
-            name: "2",
+            name: "Бельгийское белое",
         },
         {
+            key: "3",
             id: "3",
-            name: "3",
+            name: "Пильзнер",
         },
         {
+            key: "4",
             id: "4",
-            name: "4",
+            name: "Berliner Weisse",
         },
         {
+            key: "5",
             id: "5",
-            name: "5",
+            name: "Майбок",
         },
         {
+            key: "6",
             id: "6",
-            name: "6",
+            name: "Блонд эль",
         },
         {
+            key: "7",
             id: "7",
-            name: "7",
+            name: "Вайсбир",
         },
         {
+            key: "8",
             id: "8",
-            name: "8",
+            name: "Американский пейл-эль",
         },
         {
+            key: "9",
             id: "9",
-            name: "9",
+            name: "Индийский пейл-эль",
         },
         {
+            key: "10",
             id: "10",
-            name: "10",
+            name: "Сезон",
         },
         {
+            key: "11",
             id: "11",
-            name: "11",
+            name: "Английский биттер",
         },
         {
+            key: "12",
             id: "12",
-            name: "12",
+            name: "Двойной индийский пейл-эль",
         },
         {
+            key: "13",
             id: "13",
-            name: "13",
+            name: "Тёмный лагер",
         },
         {
+            key: "14",
             id: "14",
-            name: "14",
+            name: "Мэрцен",
         },
         {
+            key: "15",
             id: "15",
-            name: "15",
+            name: "Янтарный эль",
         },
         {
+            key: "16",
             id: "16",
-            name: "16",
+            name: "Бок-бир",
         },
         {
+            key: "17",
             id: "17",
-            name: "17",
+            name: "Дункелвайс",
         },
         {
+            key: "18",
             id: "18",
-            name: "18",
+            name: "Портер",
         },
         {
+            key: "19",
             id: "19",
-            name: "19",
+            name: "Стаут",
         },
         {
+            key: "20",
             id: "20",
-            name: "20",
+            name: "Имперский стаут",
         },
     ];
 
@@ -253,7 +297,7 @@ class Store {
                 longitude: bar.point.lon,
             },
             pinColor: rgb2hex(...hslToRgb(0.940928270042194, Math.random(), 0.3647058823529412)),
-            isFavourite: (Math.random() > 0.97),
+            isFavourite: (Math.random() > 0.96),
             point: bar.point,
             schedule: bar.schedule,
             contacts: bar.contact_groups[0].contacts.map(el => {
@@ -264,7 +308,7 @@ class Store {
             reviews: bar.reviews,
             beers: this.beers.reduce((acc, item) => {
                 if (Math.random() > 0.7) {
-                    acc.push(item);
+                    acc.push(item.id);
                     return acc;
                 } else { return acc;}
             }, []),
@@ -281,6 +325,10 @@ class Store {
     };
 
     @action selectBar = (key) => this.selectedBar = this.bars.filter(bar => bar.key === key)[0];
+    @action filterPanelSetState = state => this.filterPanelIsOpen = state;
+    @action getBeerById = id => this.beers.filter(beer => beer.id === id)[0];
+    @action clearDrinkFilter = () => this.drinkFilter = null;
+    @action toggleFavFilter = () => this.favFilter = !this.favFilter;
 }
 
 const barStore = new Store();
@@ -345,7 +393,7 @@ class Map extends React.Component {
                     customMapStyle={mapStyle}
                     rotateEnabled={false}
                     style={styles.map}>
-                    {barStore.bars.map(bar => (
+                    {barStore.filteredBars.map(bar => (
                         <MapView.Marker
                             coordinate={bar.coords}
                             title={bar.name}
@@ -356,7 +404,7 @@ class Map extends React.Component {
                         </MapView.Marker>
                     ))}
                 </MapView>
-                <FilterView />
+                <FilterView navigation={this.props.navigation} />
                 <BarDetail selectedBar={store.selectedBar}/>
             </View>
         );
@@ -366,9 +414,90 @@ class Map extends React.Component {
 @observer
 class FilterView extends React.Component {
     render() {
-        return (
-            <View>
+        const store = barStore;
 
+        return (
+            <View style={styles.filterView}>
+                <View style={{flex: 1, flexDirection: "row", justifyContent: "space-between", alignItems: "center"}}>
+                    <Text style={{color: "#fff", margin: 8, fontSize: 16}}>{ "Фильтры" }</Text>
+                    {store.filterPanelIsOpen
+                        ? null
+                        : (
+                            <TouchableOpacity onPress={() => store.filterPanelSetState(true)} style={{padding: 10}}>
+                                <Ionicons
+                                    name={"ios-arrow-down"}
+                                    size={16}
+                                    style={{color: "#fff"}}
+                                />
+                            </TouchableOpacity>
+                        )
+                    }
+                </View>
+                {
+                    store.filterPanelIsOpen
+                    ? (
+                        <View>
+                            {
+                                store.drinkFilter
+                                ? ( <View style={{flex: 1, flexDirection: "row", justifyContent: "space-between", alignItems: "center"}}>
+                                        <Text style={{color: "#fff", margin: 8, fontSize: 16}}>{`По сорту пива: ${store.getBeerById(store.drinkFilter).name}`}</Text>
+                                        <TouchableOpacity onPress={() => store.clearDrinkFilter()} style={{padding: 10}}>
+                                            <Ionicons
+                                                name={"ios-close"}
+                                                size={16}
+                                                style={{color: "#fff"}}
+                                            />
+                                        </TouchableOpacity>
+                                    </View>
+                                )
+                                :   <TouchableOpacity onPress={() => this.props.navigation.navigate("DrinksTab")}>
+                                        <Text style={{color: "#fff", margin: 8, fontSize: 16}}>{"Отфильтровать по сорту"}</Text>
+                                    </TouchableOpacity>
+                            }
+                        </View>
+                        )
+                    : null
+                }
+                {
+                    store.filterPanelIsOpen
+                    ? (
+                        <View>
+                            {
+                                store.favFilter
+                                ? ( <View style={{flex: 1, flexDirection: "row", justifyContent: "space-between", alignItems: "center"}}>
+                                        <Text style={{color: "#fff", margin: 8, fontSize: 16}}>{`По любимым местам`}</Text>
+                                        <TouchableOpacity onPress={() => store.toggleFavFilter()} style={{padding: 10}}>
+                                            <Ionicons
+                                                name={"ios-close"}
+                                                size={16}
+                                                style={{color: "#fff"}}
+                                            />
+                                        </TouchableOpacity>
+                                    </View>
+                                )
+                                :   <TouchableOpacity onPress={() => store.toggleFavFilter()}>
+                                        <Text style={{color: "#fff", margin: 8, fontSize: 16}}>{"Отфильтровать по любимым"}</Text>
+                                    </TouchableOpacity>
+                            }
+                        </View>
+                        )
+                    : null
+                }
+                {
+                    store.filterPanelIsOpen
+                    ? (
+                        <View style={{flex: 1, flexDirection: "row", justifyContent: "space-around", alignItems: "center"}}>
+                            <TouchableOpacity onPress={() => store.filterPanelSetState(false)} style={{padding: 10}}>
+                                <Ionicons
+                                    name={"ios-arrow-up"}
+                                    size={16}
+                                    style={{color: "#fff"}}
+                                />
+                            </TouchableOpacity>
+                        </View>
+                    )
+                    : null
+                }
             </View>
         )
     }
@@ -414,6 +543,7 @@ class BarDetail extends React.Component {
 
     render() {
         const bar = this.props.selectedBar;
+        const store = barStore;
         if (bar) {
             return (
                 <SlidingUpPanel
@@ -457,8 +587,10 @@ class BarDetail extends React.Component {
                                     );
                                 })}
                                 <Text style={{color: "#fff", fontSize: 24, marginBottom: 5}}>Сорта пива</Text>
-                                {bar.beers.map(item => (
-                                        <Text style={{color: "#fff", fontSize: 16}} key={item.id}>{item.name}</Text>
+                                {bar.beers
+                                    .map(id => store.getBeerById(id))
+                                    .map(item => (
+                                        <Text style={{color: "#fff", fontSize: 16}} key={item.key}>{item.name}</Text>
                                 ))}
 
                             </View>
@@ -498,16 +630,20 @@ class List extends React.Component {
         const store = this.props.store;
         return (
             <FlatList
-                style={styles.container}
+                style={styles.list}
                 data={store.bars}
-                renderItem={({item}) => <Text style={styles.item}>{item.name}</Text>}
+                renderItem={({item}) => (
+                    <TouchableOpacity onPress={() => this.props.navigation.navigate("MainTab")}>
+                        <Text style={styles.item}>{item.name}</Text>
+                    </TouchableOpacity>
+                )}
             />
         );
     }
 }
 
 const CatalogueScreen = ({navigation}) => (
-    <List store={barStore}/>
+    <List store={barStore} navigation={navigation}/>
 );
 
 @observer
@@ -516,9 +652,16 @@ class DrinksScreen extends React.Component {
         const store = barStore;
         return (
             <FlatList
-                style={styles.container}
+                style={styles.list}
                 data={store.beers.map(bar => {bar.key = bar.id; return bar;})}
-                renderItem={({item}) => <Text style={styles.item}>{item.name}</Text>}
+                renderItem={({item}) => (
+                    <TouchableOpacity onPress={() => {
+                        store.drinkFilter = item.id;
+                        this.props.navigation.navigate("MainTab");
+                    }}>
+                        <Text style={styles.item}>{item.name}</Text>
+                    </TouchableOpacity>
+                )}
             />
         );
     }
