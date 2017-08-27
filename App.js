@@ -1,7 +1,7 @@
 import React, {Component} from "react";
 import {
     Button, FlatList, Image, ScrollView, StyleSheet, Text, TouchableOpacity,
-    View,
+    View, Animated, Dimensions
 } from "react-native";
 import {
     addNavigationHelpers,
@@ -19,10 +19,67 @@ import Ionicons from "react-native-vector-icons/Ionicons";
 import {bars, bars2} from "./bars";
 
 import {mapStyle} from "./store";
+import SlidingUpPanel from "rn-sliding-up-panel";
+
+//import { LoginPage } from "./components/pages/login/login.component";
+
+// store = new Store();
 
 class Store {
-  @observable bars = [];
-  @observable user = {};
+    @observable bars = [];
+    @observable user = {};
+    @observable region = {
+        latitude: 59.9408928,
+        longitude: 30.3148344,
+        latitudeDelta: 0.0922,
+        longitudeDelta: 0.0421,
+    };
+    @observable selectedBar;
+
+  users = [
+      {
+          id: 1,
+          name: "Алексей",
+          gender: "",
+          beer: [],
+          friends: [3,5],
+          bars: [],
+      },
+      {
+          id: 2,
+          name: "Коля",
+          gender: "",
+          beer: [],
+          friends: [4],
+          bars: [],
+      },
+      {
+          id: 3,
+          name: "Михаил",
+          gender: "",
+          beer: [],
+          friends: [1, 5],
+          bars: [],
+      },
+      {
+          id: 4,
+          name: "Арсен",
+          gender: "",
+          beer: [],
+          friends: [2],
+          bars: [],
+      },
+      {
+          id: 5,
+          name: "Артем",
+          gender: "",
+          beer: [],
+          friends: [1, 3],
+          bars: [],
+      },
+  ];
+
+  beers = [];
 
   @action addBars = (bars) => {
     bars.forEach(bar => this.bars.push({
@@ -32,9 +89,20 @@ class Store {
             latitude: bar.point.lat,
             longitude: bar.point.lon,
         },
+        pinColor: "#fff",
         point: bar.point
     }))
   };
+
+  @action loginUser = () =>{
+      this.user = this.users[Math.floor(Math.random()*this.users.length)];
+      console.log("blbalba");
+  };
+    @action setLocation = (region) => {
+        this.region = region;
+    };
+
+    @action selectBar = (key) => this.selectedBar = this.bars.filter(bar => bar.key === key)[0];
 }
 
 const barStore = new Store();
@@ -64,30 +132,63 @@ const MyNavScreen = ({navigation, banner}) => (
 @observer
 class Map extends React.Component {
     render() {
+        const store = barStore;
         return (
-            <MapView
-                initialRegion={{
-                    latitude: 59.9408928,
-                    longitude: 30.3148344,
-                    latitudeDelta: 0.0922,
-                    longitudeDelta: 0.0421,
-                }}
-                provider={"google"}
-                showsUserLocation={true}
-                followsUserLocation={true}
-                minZoomLevel={6}
-                customMapStyle={mapStyle}
-                style={styles.container}>
-                {barStore.bars.map(bar => (
-                    <MapView.Marker
-                      coordinate={bar.coords}
-                      title={bar.name}
-                      description={"lmao"}
-                      key={bar.key}
-                    />
-                ))}
-            </MapView>
-        )
+            <View style={styles.container}>
+                <MapView
+                    provider={"google"}
+                    region={store.region}
+                    showsUserLocation={true}
+                    followsUserLocation={true}
+                    onRegionChangeComplete={region => store.setLocation(region)}
+                    customMapStyle={mapStyle}
+                    style={styles.map}>
+                    {barStore.bars.map(bar => (
+                        <MapView.Marker
+                            coordinate={bar.coords}
+                            title={bar.name}
+                            key={bar.key}
+                            pinColor={bar.pinColor}
+                            onPress={event => store.selectBar(bar.key)}>
+                            <MapView.Callout tooltip={true} />
+                        </MapView.Marker>
+                    ))}
+                </MapView>
+                <BarDetail selectedBar={store.selectedBar}/>
+            </View>
+        );
+    }
+}
+const {height} = Dimensions.get('window');
+@observer
+class BarDetail extends React.Component {
+    static defaultProps = {
+        draggableRange: {
+            top: height,
+            bottom: 200,
+        },
+    };
+
+    _draggedValue = new Animated.Value(-120);
+    render() {
+        if (this.props.selectedBar) {
+            return (
+                <SlidingUpPanel
+                  visible
+                  showBackdrop={false}
+                  ref={(c) => {this._panel = c}}
+                  draggableRange={this.props.draggableRange}
+                  onDrag={(v) => this._draggedValue.setValue(v)}>
+                  <View style={styles.panel}>
+                    <View style={styles.panelHeader}>
+                      <Text style={{color: '#FFF'}}>Bottom Sheet Peek</Text>
+                    </View>
+                  </View>
+                </SlidingUpPanel>
+            )
+        } else {
+            return null;
+        }
     }
 }
 
@@ -116,13 +217,24 @@ class List extends React.Component {
                 data={store.bars}
                 renderItem={({item}) => <Text style={styles.item}>{item.name}</Text>}
             />
-        )
+        );
     }
 }
 
 const CatalogueScreen = ({navigation}) => (
     <List store={barStore}/>
 );
+
+@observer
+class StateScreen extends React.Component {
+    render() {
+        return (
+            <Text>
+                {`lat: ${barStore.region.latitude}, lon: ${barStore.region.longitude}`}
+            </Text>
+        )
+    }
+}
 
 const TabNav = TabNavigator(
     {
@@ -141,7 +253,7 @@ const TabNav = TabNavigator(
                 ),
             },
         },
-        CatalogueTab:{
+        CatalogueTab: {
             screen: CatalogueScreen,
             path: "/catalogue",
             navigationOptions: {
@@ -155,14 +267,28 @@ const TabNav = TabNavigator(
                 ),
             },
         },
-        SettingsTab: {
-            screen: MySettingsScreen,
-            path: "/settings",
+        StateTab: {
+            screen: StateScreen,
+            path: "/state",
             navigationOptions: {
-                title: "Settings",
+                title: "state",
                 tabBarIcon: ({tintColor, focused}) => (
                     <Ionicons
-                        name={focused ? "ios-settings" : "ios-settings-outline"}
+                        name={focused ? "ios-list" : "ios-list-outline"}
+                        size={26}
+                        style={{color: tintColor}}
+                    />
+                ),
+            },
+        },
+        SettingsTab: {
+            screen: MySettingsScreen,
+            path: "/profile",
+            navigationOptions: {
+                title: "Профиль",
+                tabBarIcon: ({tintColor, focused}) => (
+                    <Ionicons
+                        name={focused ? "ios-person" : "ios-person-outline"}
                         size={26}
                         style={{color: tintColor}}
                     />
@@ -196,16 +322,17 @@ const AppScreen = StackNavigator({
     },
 });
 
+@observer
 export default class App extends React.Component {
     render() {
         const store = barStore;
         if (store.user) {
             return (
-                <AppScreen screenProps={ store }/>
+                <AppScreen screenProps={ barStore }/>
             )
         } else {
             return (
-                <Text/>
+                <LoginPage store={ barStore }/>
             )
         }
 
@@ -215,6 +342,21 @@ export default class App extends React.Component {
 const styles = StyleSheet.create({
     container: {
         flex: 1,
+    },
+    map: {
+        flex: 1,
+    },
+    panel: {
+        flex: 1,
+        backgroundColor: "white",
+        position: "relative",
+    },
+    barDetail: {
+        position: "absolute",
+        left: 0,
+        right: 0,
+        bottom: 0,
+        zIndex: 10,
     },
     scrollView: {
         position: "absolute",
@@ -277,5 +419,12 @@ const styles = StyleSheet.create({
         padding: 10,
         fontSize: 18,
         height: 44,
+    },
+
+    panelHeader: {
+        height: 120,
+        backgroundColor: "#b197fc",
+        alignItems: "center",
+        justifyContent: "center",
     }
 });

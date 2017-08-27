@@ -26,6 +26,7 @@
     "react-native": "^0.47.0",
     "react-native-maps": "^0.16.2",
     "react-native-vector-icons": "^4.3.0",
-    "react-navigation": "^1.0.0-beta.11"
+    "react-navigation": "^1.0.0-beta.11",
+    "rn-sliding-up-panel": "^1.1.5"
   }
 }
