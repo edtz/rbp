@@ -1,7 +1,7 @@
 import React, {Component} from "react";
 import {
     Button, FlatList, Image, ScrollView, StyleSheet, Text, TouchableOpacity,
-    View, Animated, Dimensions, StatusBar
+    View, Animated, Dimensions, StatusBar, SectionList,
 } from "react-native";
 import {
     addNavigationHelpers,
@@ -10,7 +10,7 @@ import {
     TabNavigator,
 } from "react-navigation";
 
-import {observable, action} from "mobx";
+import {observable, action, computed} from "mobx";
 import {observer} from "mobx-react";
 import MapView from "react-native-maps";
 
@@ -21,9 +21,14 @@ import {bars, bars2} from "./bars";
 
 import {mapStyle} from "./store";
 import SlidingUpPanel from "rn-sliding-up-panel";
+import {hslToRgb, rgbToHsl, rgb2hex} from "./colorConversion"
 
 import { LoginPage } from "./components/pages/login/login.component";
 
+
+StatusBar.setBarStyle('light-content', true);
+const {height} = Dimensions.get("window");
+const colourFavourite = "#ffd216";
 
 const styles = StyleSheet.create({
     container: {
@@ -34,7 +39,7 @@ const styles = StyleSheet.create({
     },
     panel: {
         flex: 1,
-        backgroundColor: "white",
+        backgroundColor: "#1c2939",
         position: "relative",
     },
     barDetail: {
@@ -44,78 +49,16 @@ const styles = StyleSheet.create({
         bottom: 0,
         zIndex: 10,
     },
-    scrollView: {
-        position: "absolute",
-        bottom: 30,
-        left: 0,
-        right: 0,
-        paddingVertical: 10,
-    },
-    card: {
-        padding: 10,
-        elevation: 2,
-        backgroundColor: "#FFF",
-        marginHorizontal: 10,
-        shadowColor: "#000",
-        shadowRadius: 5,
-        shadowOpacity: 0.3,
-        shadowOffset: {x: 2, y: -2},
-        height: 100,
-        width: 100,
-        overflow: "hidden",
-    },
-    cardImage: {
-        flex: 3,
-        width: "100%",
-        height: "100%",
-        alignSelf: "center",
-    },
-    textContent: {
-        flex: 1,
-    },
-    cardtitle: {
-        fontSize: 12,
-        marginTop: 5,
-        fontWeight: "bold",
-    },
-    cardDescription: {
-        fontSize: 12,
-        color: "#444",
-    },
-    markerWrap: {
-        alignItems: "center",
-        justifyContent: "center",
-    },
-    marker: {
-        width: 8,
-        height: 8,
-        borderRadius: 4,
-        backgroundColor: "rgba(130,4,150, 0.9)",
-    },
-    ring: {
-        width: 24,
-        height: 24,
-        borderRadius: 12,
-        backgroundColor: "rgba(130,4,150, 0.3)",
-        position: "absolute",
-        borderWidth: 1,
-        borderColor: "rgba(130,4,150, 0.5)",
-    },
-    item: {
-        padding: 10,
-        fontSize: 18,
-        height: 44,
-    },
     dragger: {
         width: 50,
         height: 4,
         backgroundColor: "#8c9ba1",
         borderRadius: 25,
         marginTop: 7,
-        marginBottom: 17,
+        marginBottom: 10,
     },
     panelHeader: {
-        height: 100,
+        maxHeight: 100,
         backgroundColor: "#1c2939",
         flex: 1,
         alignItems: "center",
@@ -123,18 +66,57 @@ const styles = StyleSheet.create({
     uiColor: {
         backgroundColor: "#36465a"
     },
+    info: {
+        flex: 1,
+        alignSelf: "flex-start",
+        marginLeft: 12,
+        alignItems: "flex-start",
+    },
+    title: {
+        color: "#fff",
+        fontSize: 28,
+        marginBottom: 5,
+    },
+    rating: {
+        color: "#fff",
+        fontSize: 24,
+    },
+    item: {
+        marginLeft: 10,
+        marginTop: 5,
+        fontSize: 24,
+    },
+    favoriteIcon: {
+        position: "absolute",
+        top: -24,
+        right: 24,
+        backgroundColor: colourFavourite,
+        width: 48,
+        height: 48,
+        padding: 8,
+        borderRadius: 24,
+        zIndex: 1,
+        display: "flex",
+        justifyContent: "center",
+        alignItems: "center"
+    },
 });
 
 class Store {
     @observable bars = [];
-    @observable user = {};
+    @observable user;
     @observable region = {
-        latitude: 59.9408928,
-        longitude: 30.3148344,
-        latitudeDelta: 0.0922,
-        longitudeDelta: 0.0421,
+        latitude: 59.9308928,
+        longitude: 30.3348344,
+        latitudeDelta: 0.0922 /2,
+        longitudeDelta: 0.0421 /2,
     };
     @observable selectedBar;
+
+    @observable drinkFilter;
+    @computed get filteredBars() {
+        return this.bars.filter(el => el.drinks.includes(this.drinkFilter));
+    };
 
     users = [
         {
@@ -179,24 +161,120 @@ class Store {
         },
     ];
 
-    beers = [];
+    beers = [
+        {
+            id: "1",
+            name: "1",
+        },
+        {
+            id: "2",
+            name: "2",
+        },
+        {
+            id: "3",
+            name: "3",
+        },
+        {
+            id: "4",
+            name: "4",
+        },
+        {
+            id: "5",
+            name: "5",
+        },
+        {
+            id: "6",
+            name: "6",
+        },
+        {
+            id: "7",
+            name: "7",
+        },
+        {
+            id: "8",
+            name: "8",
+        },
+        {
+            id: "9",
+            name: "9",
+        },
+        {
+            id: "10",
+            name: "10",
+        },
+        {
+            id: "11",
+            name: "11",
+        },
+        {
+            id: "12",
+            name: "12",
+        },
+        {
+            id: "13",
+            name: "13",
+        },
+        {
+            id: "14",
+            name: "14",
+        },
+        {
+            id: "15",
+            name: "15",
+        },
+        {
+            id: "16",
+            name: "16",
+        },
+        {
+            id: "17",
+            name: "17",
+        },
+        {
+            id: "18",
+            name: "18",
+        },
+        {
+            id: "19",
+            name: "19",
+        },
+        {
+            id: "20",
+            name: "20",
+        },
+    ];
 
     @action addBars = (bars) => {
         bars.forEach(bar => this.bars.push({
             key: bar.id,
-            name: bar.name,
+            name: bar.name_ex.primary,
             coords: {
                 latitude: bar.point.lat,
                 longitude: bar.point.lon,
             },
-            pinColor: "#fff",
+            pinColor: rgb2hex(...hslToRgb(0.940928270042194, Math.random(), 0.3647058823529412)),
+            isFavourite: (Math.random() > 0.97),
             point: bar.point,
+            schedule: bar.schedule,
+            contacts: bar.contact_groups[0].contacts.map(el => {
+                el.key = el.value;
+                return el;
+            }),
+            rubrics: bar.rubrics,
+            reviews: bar.reviews,
+            beers: this.beers.reduce((acc, item) => {
+                if (Math.random() > 0.7) {
+                    acc.push(item);
+                    return acc;
+                } else { return acc;}
+            }, []),
+            status: "открыт",
         }));
+        this.bars.filter(bar => bar.isFavourite).forEach(bar => bar.pinColor = colourFavourite);
     };
 
     @action loginUser = () => {
         this.user = this.users[Math.floor(Math.random() * this.users.length)];
-        console.log("blbalba");
     };
     @action setLocation = (region) => {
         this.region = region;
@@ -210,8 +288,6 @@ const barStore = new Store();
 barStore.addBars(bars.result.items);
 barStore.addBars(bars2.result.items);
 
-
-StatusBar.setBarStyle('light-content', true);
 
 const MyNavScreen = ({navigation, banner}) => (
     <ScrollView>
@@ -232,6 +308,29 @@ const MyNavScreen = ({navigation, banner}) => (
 );
 
 @observer
+class NavScreen extends React.Component {
+    render() {
+        return (
+            <ScrollView>
+                <Button
+                    onPress={() => this.props.navigation.navigate("Profile", {name: "Jordan"})}
+                    title="Open profile screen"
+                />
+                <Button
+                    onPress={() => this.props.navigation.navigate("NotifSettings")}
+                    title="Open notifications screen"
+                />
+                <Button
+                    onPress={() => this.props.navigation.navigate("SettingsTab")}
+                    title="Go to settings tab"
+                />
+                <Button onPress={() => this.props.navigation.goBack(null)} title="Go back"/>
+            </ScrollView>
+        )
+    }
+};
+
+@observer
 class Map extends React.Component {
     render() {
         const store = barStore;
@@ -244,6 +343,7 @@ class Map extends React.Component {
                     followsUserLocation={true}
                     onRegionChangeComplete={region => store.setLocation(region)}
                     customMapStyle={mapStyle}
+                    rotateEnabled={false}
                     style={styles.map}>
                     {barStore.bars.map(bar => (
                         <MapView.Marker
@@ -256,13 +356,24 @@ class Map extends React.Component {
                         </MapView.Marker>
                     ))}
                 </MapView>
+                <FilterView />
                 <BarDetail selectedBar={store.selectedBar}/>
             </View>
         );
     }
 }
 
-const {height} = Dimensions.get("window");
+@observer
+class FilterView extends React.Component {
+    render() {
+        return (
+            <View>
+
+            </View>
+        )
+    }
+}
+
 
 @observer
 class BarDetail extends React.Component {
@@ -273,10 +384,37 @@ class BarDetail extends React.Component {
         },
     };
 
+    constructor(props) {
+        super(props);
+
+        this._renderFavoriteIcon = this._renderFavoriteIcon.bind(this);
+    }
+
+    _renderFavoriteIcon() {
+        const {top, bottom} = this.props.draggableRange;
+        const draggedValue = this._draggedValue.interpolate({
+            inputRange: [-(top + bottom) / 2, -bottom],
+            outputRange: [0, 1],
+            extrapolate: "clamp",
+        });
+
+        const transform = [{scale: draggedValue}];
+
+        return (
+            <Animated.View style={[styles.favoriteIcon, {transform}]}>
+                    <Ionicons
+                        name={"ios-heart"}
+                        size={32}
+                        style={{color: "#fff", paddingTop: 2}}
+                    />
+            </Animated.View>
+        );
+    }
     _draggedValue = new Animated.Value(-120);
 
     render() {
-        if (this.props.selectedBar) {
+        const bar = this.props.selectedBar;
+        if (bar) {
             return (
                 <SlidingUpPanel
                     visible
@@ -287,11 +425,43 @@ class BarDetail extends React.Component {
                     draggableRange={this.props.draggableRange}
                     onDrag={(v) => this._draggedValue.setValue(v)}>
                     <View style={styles.panel}>
+                        {bar.isFavourite ? this._renderFavoriteIcon() : null}
                         <View style={styles.panelHeader}>
-                            <View style={styles.row}>
-                                <View style={styles.dragger}/>
+                            <View style={styles.dragger}/>
+                            <View style={styles.info}>
+                                <Text style={styles.title}>{bar.name}</Text>
+                                <Text style={styles.rating}>{`Рейтинг ${bar.reviews.general_rating || "неизвестен"}, сейчас ${bar.status}`}</Text>
                             </View>
-                            <Text style={{color: "#FFF"}}>Bottom Sheet Peek</Text>
+                        </View>
+                        <View style={styles.panel}>
+                            <View style={{ marginLeft: 10, marginRight: 10}}>
+                                <Text style={{color: "#fff", fontSize: 24, marginBottom: 5}}>Контакты</Text>
+                                {bar.contacts.map(item => {
+                                    const thing = {
+                                        "phone": "Телефон",
+                                        "email": "Почта",
+                                        "vkontakte": "ВК",
+                                        "instagram": "IG",
+                                        "facebook": "FB",
+                                        "twitter": "TW",
+                                        "website": "Сайт",
+                                    };
+                                    let desc;
+                                    if (Object.keys(thing).includes(item.type)) {
+                                        desc = thing[item.type];
+                                    } else {
+                                        desc = "???";
+                                    }
+                                    return (
+                                        <Text style={{color: "#fff", fontSize: 16}} key={item.value}>{`${desc}: ${item.text}`}</Text>
+                                    );
+                                })}
+                                <Text style={{color: "#fff", fontSize: 24, marginBottom: 5}}>Сорта пива</Text>
+                                {bar.beers.map(item => (
+                                        <Text style={{color: "#fff", fontSize: 16}} key={item.id}>{item.name}</Text>
+                                ))}
+
+                            </View>
                         </View>
                     </View>
                 </SlidingUpPanel>
@@ -313,9 +483,14 @@ const MyNotificationsSettingsScreen = ({navigation}) => (
     <MyNavScreen banner="Notifications Screen" navigation={navigation}/>
 );
 
-const MySettingsScreen = ({navigation}) => (
-    <MyNavScreen banner="Settings Screen" navigation={navigation}/>
-);
+@observer
+class SettingsScreen extends React.Component {
+    render() {
+        return (
+            <NavScreen banner="Settings Screen" navigation={this.props.navigation}/>
+        )
+    }
+}
 
 @observer
 class List extends React.Component {
@@ -336,12 +511,15 @@ const CatalogueScreen = ({navigation}) => (
 );
 
 @observer
-class StateScreen extends React.Component {
+class DrinksScreen extends React.Component {
     render() {
+        const store = barStore;
         return (
-            <Text>
-                {`lat: ${barStore.region.latitude}, lon: ${barStore.region.longitude}`}
-            </Text>
+            <FlatList
+                style={styles.container}
+                data={store.beers.map(bar => {bar.key = bar.id; return bar;})}
+                renderItem={({item}) => <Text style={styles.item}>{item.name}</Text>}
+            />
         );
     }
 }
@@ -352,7 +530,7 @@ const TabNav = TabNavigator(
             screen: Map,
             path: "/",
             navigationOptions: {
-                title: "Карта",
+                title: "InBottle | Red Bad Parrot",
                 tabBarLabel: "Карта",
                 tabBarIcon: ({tintColor, focused}) => (
                     <Ionicons
@@ -367,24 +545,24 @@ const TabNav = TabNavigator(
             screen: CatalogueScreen,
             path: "/catalogue",
             navigationOptions: {
-                title: "Каталог",
+                title: "Места",
                 tabBarIcon: ({tintColor, focused}) => (
                     <Ionicons
-                        name={focused ? "ios-list" : "ios-list-outline"}
+                        name={focused ? "ios-restaurant" : "ios-restaurant-outline"}
                         size={26}
                         style={{color: tintColor}}
                     />
                 ),
             },
         },
-        StateTab: {
-            screen: StateScreen,
-            path: "/state",
+        DrinksTab: {
+            screen: DrinksScreen,
+            path: "/drinks",
             navigationOptions: {
-                title: "state",
+                title: "Пиво",
                 tabBarIcon: ({tintColor, focused}) => (
                     <Ionicons
-                        name={focused ? "ios-list" : "ios-list-outline"}
+                        name={focused ? "ios-wine" : "ios-wine-outline"}
                         size={26}
                         style={{color: tintColor}}
                     />
@@ -392,7 +570,7 @@ const TabNav = TabNavigator(
             },
         },
         SettingsTab: {
-            screen: MySettingsScreen,
+            screen: SettingsScreen,
             path: "/profile",
             navigationOptions: {
                 title: "Профиль",
