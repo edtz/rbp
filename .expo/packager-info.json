@@ -1,5 +1,8 @@
 {
-  "expoServerPort": null,
-  "packagerPort": null,
-  "packagerPid": null
+  "expoServerPort": 19000,
+  "packagerPort": 19001,
+  "packagerPid": 94382,
+  "expoServerNgrokUrl": "https://bu-jaa.eugene-f.rbp.exp.direct",
+  "packagerNgrokUrl": "https://packager.bu-jaa.eugene-f.rbp.exp.direct",
+  "ngrokPid": 94402
 }

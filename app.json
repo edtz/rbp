@@ -1,5 +1,12 @@
 {
   "expo": {
-    "sdkVersion": "20.0.0"
+    "name": "InBottle",
+    "icon": "./assets/img/logo-circle.png",
+    "version": "1.0.0",
+    "slug": "inbottle",
+    "sdkVersion": "20.0.0",
+    "ios": {
+      "bundleIdentifier": "com.redbadparrots.inbottle"
+    },
   }
 }
